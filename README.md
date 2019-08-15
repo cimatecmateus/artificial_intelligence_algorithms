@@ -1,0 +1,2 @@
+# artificial_intelligence_algorithms
+Codes for Artificial Intelligence subject
