@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.svm import SVR
 
 if __name__ == '__main__':
     dataset_ax = pd.read_csv('unknown_dataset/AX.csv', header=None)
@@ -27,10 +28,10 @@ if __name__ == '__main__':
 
     ##########################################################################################
 
-    X_train, X_test, y_train, y_test = train_test_split(dataset_ax.values, dataset_ay.values, test_size=0.3)
+    x_train, x_test, y_train, y_test = train_test_split(dataset_ax.values, dataset_ay.values, test_size=0.3)
 
-    print("Length of trainning =", len(X_train))
-    print("Length of testing =", len(X_test))
+    print("Length of trainning =", len(x_train))
+    print("Length of testing =", len(x_test))
 
     # Creates two subplots and unpacks the output array immediately
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
@@ -39,9 +40,9 @@ if __name__ == '__main__':
     ax2.set_title('Y Train')
     ax2.plot(dataset_ay)
     plt.show()
-
+    
     neural_network_model = tf.keras.models.Sequential()
-    neural_network_model.add(tf.keras.layers.Dense(2, input_shape=(X_train.shape[1],), activation=tf.nn.tanh))
+    neural_network_model.add(tf.keras.layers.Dense(2, input_shape=(x_train.shape[1],), activation=tf.nn.tanh))
     neural_network_model.add(tf.keras.layers.Dense(3, activation=tf.nn.tanh))
     neural_network_model.add(tf.keras.layers.Dense(16, activation=tf.nn.tanh))
     neural_network_model.add(tf.keras.layers.Dense(y_train.shape[1], activation="relu"))
@@ -54,13 +55,13 @@ if __name__ == '__main__':
     batch_size = 1
     epochs = 30
 
-    history = neural_network_model.fit(X_train, y_train,
+    history = neural_network_model.fit(x_train, y_train,
                                        batch_size=batch_size,
                                        epochs=epochs,
                                        verbose=1,
-                                       validation_data=(X_test, y_test))
+                                       validation_data=(x_test, y_test))
 
-    loss_value, msle_value, mse_value = neural_network_model.evaluate(X_test, y_test)
+    loss_value, msle_value, mse_value = neural_network_model.evaluate(x_test, y_test)
     print("Loss value=", loss_value, "MSLE value =", msle_value, "MSE value = ", mse_value)
 
     metrics_keys = list(history.history.keys())
@@ -89,14 +90,26 @@ if __name__ == '__main__':
     ax3.set_label(ax3.legend(loc='upper right'))
     ax3.set_xlabel('Epoch')
     
-    plt.show()
+    y_predicted = neural_network_model.predict(x_test)
 
-    y_predicted = neural_network_model.predict(X_test)
+    f, ax_array = plt.subplots(5, 1, sharex=True)
 
-    plt.title('Y Predicted vs Y Test')
-    plt.xlabel('Sample')
-    plt.ylabel('Angle (rad)')
-    plt.plot(y_test, 'ro', label='y_test')
-    plt.plot(y_predicted, 'bx', label='y_predicted')
-    plt.legend(loc='upper right')
+    f.suptitle("y_test x y_predicted", fontsize=16)
+
+    ax_array[0].set_title('MLP')
+    ax_array[0].plot(y_test, 'ro', label='y_test')
+    ax_array[0].plot(y_predicted, 'bx', label='y_predicted')
+    ax_array[0].set(ylabel="Angle (rad)")
+    ax_array[0].legend(loc='upper right')
+
+    for i, svr in zip(list(range(1, ax_array.shape[0])), svr_array):
+        svr.fit(x_train, y_train)
+        ax_array[i].set_title(svr.kernel)
+        ax_array[i].plot(y_test, 'ro', label='y_test')
+        ax_array[i].plot(svr.predict(x_test), 'bx', label='y_predicted')
+        ax_array[i].set(ylabel="Angle (rad)")
+        if i == (len(ax_array) - 1):
+            ax_array[i].set(xlabel="Sample", ylabel="Angle (rad)")
+        ax_array[i].legend(loc='upper right')
+
     plt.show()
