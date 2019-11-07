@@ -102,6 +102,12 @@ if __name__ == '__main__':
     ax_array[0].set(ylabel="Angle (rad)")
     ax_array[0].legend(loc='upper right')
 
+    # Training classifiers
+    svr_array = [SVR(kernel='linear', C=10, gamma='auto'),
+                 SVR(kernel='poly', C=20, degree=2),
+                 SVR(kernel='rbf', C=15, gamma='auto'),
+                 SVR(kernel='sigmoid', gamma='auto')]
+
     for i, svr in zip(list(range(1, ax_array.shape[0])), svr_array):
         svr.fit(x_train, y_train)
         ax_array[i].set_title(svr.kernel)
